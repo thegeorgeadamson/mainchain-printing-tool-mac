@@ -31,8 +31,8 @@ You should see:
   ================================
   Listening on http://localhost:50515
   Printers found: 2
-    * TOSHIBA_e_STUDIO409S (Idle)
-      TOSHIBA_e_STUDIO5525AC (Idle)
+    * Your_Default_Printer (Idle)
+      Another_Printer (Idle)
   ================================
 ```
 
