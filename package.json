@@ -1,0 +1,29 @@
+{
+  "name": "mainchain-printing-tool-mac",
+  "version": "1.0.0",
+  "description": "macOS replacement for the Mainchain Printing Tool — enables direct printing from Freman on Mac",
+  "main": "server.js",
+  "bin": {
+    "mpt-mac": "server.js"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "mainchain",
+    "freman",
+    "printing",
+    "macos",
+    "signalr"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.0",
+    "uuid": "^9.0.0",
+    "ws": "^8.16.0"
+  }
+}
