@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .titlebar {
+      -webkit-app-region: drag;
+      height: 38px;
+      flex-shrink: 0;
+    }
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 0 40px 30px;
+    }
+    .step { display: none; flex-direction: column; flex: 1; }
+    .step.active { display: flex; }
+    .step h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .step p {
+      font-size: 14px;
+      color: #999;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .content { flex: 1; }
+    .logo {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .printer-list {
+      background: #252525;
+      border-radius: 8px;
+      padding: 4px 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .printer-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+    }
+    .printer-row .check { color: #34c759; font-size: 16px; }
+    .printer-row .name { font-size: 14px; }
+    .printer-row .default-tag {
+      font-size: 11px;
+      color: #888;
+      background: #333;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+    .no-printers {
+      padding: 20px;
+      text-align: center;
+      color: #888;
+    }
+    .no-printers p { margin-bottom: 12px; }
+    .url-box {
+      background: #252525;
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .url-box code {
+      font-family: 'SF Mono', Menlo, monospace;
+      font-size: 15px;
+      color: #5ac8fa;
+      flex: 1;
+    }
+    .url-box button {
+      background: #333;
+      border: none;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .url-box button:hover { background: #444; }
+    .url-box button.copied { background: #1a3a1a; color: #34c759; }
+    .instructions {
+      background: #252525;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .instructions ol {
+      padding-left: 20px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #bbb;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #5ac8fa;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 20px;
+      flex-shrink: 0;
+    }
+    .nav button {
+      padding: 8px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-back {
+      background: #333;
+      color: #ccc;
+    }
+    .btn-back:hover { background: #444; }
+    .btn-next {
+      background: #0a84ff;
+      color: #fff;
+    }
+    .btn-next:hover { background: #0070e0; }
+    .btn-next:disabled { background: #333; color: #666; cursor: not-allowed; }
+    .btn-link {
+      background: none;
+      border: 1px solid #444;
+      color: #5ac8fa;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .btn-link:hover { background: #252525; }
+    .dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      padding: 16px 0 0;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #444;
+    }
+    .dot.active { background: #0a84ff; }
+    .success-icon {
+      font-size: 64px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="titlebar"></div>
+  <div class="container">
+
+    <!-- Step 1: Welcome -->
+    <div class="step active" id="step-1">
+      <div class="content">
+        <div class="logo">&#x1F5A8;</div>
+        <h2>Welcome to Mainchain Printing Tool</h2>
+        <p>This app lets you print directly from Freman on your Mac. It runs in your menu bar and connects your macOS printers to Mainchain's freight management system.</p>
+        <p>Let's get you set up in a few quick steps.</p>
+      </div>
+      <div class="nav">
+        <div></div>
+        <button class="btn-next" onclick="goTo(2)">Get Started</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Printer Check -->
+    <div class="step" id="step-2">
+      <div class="content">
+        <h2>Your Printers</h2>
+        <p>These printers were detected on your Mac. They'll be available in Freman for printing consignment notes, labels, and declarations.</p>
+        <div class="printer-list" id="printer-list"></div>
+        <div style="margin-top: 12px;">
+          <button class="btn-link" onclick="refreshPrinters()">&#x21BB; Refresh</button>
+          <button class="btn-link" style="margin-left: 8px;" onclick="openPrinterSettings()">Add Printer...</button>
+        </div>
+      </div>
+      <div class="nav">
+        <button class="btn-back" onclick="goTo(1)">Back</button>
+        <button class="btn-next" onclick="goTo(3)">Next</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Freman Config -->
+    <div class="step" id="step-3">
+      <div class="content">
+        <h2>Connect to Freman</h2>
+        <p>Enter this URL in your Freman printing settings to connect.</p>
+        <div class="url-box" style="margin-bottom: 10px;">
+          <code id="mpt-url">http://localhost:50515</code>
+          <button id="copy-btn" onclick="copyUrl()">Copy</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <span style="font-size:13px;color:#888;">Port:</span>
+          <input type="number" id="wizard-port" min="1024" max="65535" value="50515"
+            style="width:100px;background:#252525;border:1px solid #444;border-radius:6px;padding:6px 10px;color:#fff;font-size:14px;font-family:'SF Mono',Menlo,monospace;outline:none;"
+            oninput="updatePort()">
+          <span style="font-size:11px;color:#666;">Default: 50515</span>
+        </div>
+        <div class="instructions">
+          <ol>
+            <li>Open <strong>Freman</strong> in your browser</li>
+            <li>Go to <strong>Maintain &gt; Settings &gt; Printing</strong></li>
+            <li>Paste the URL into <strong>Mainchain Printing Tool Link</strong></li>
+            <li>Click <strong>Test connection</strong> to verify</li>
+            <li>Assign printers to each print type and click <strong>Save</strong></li>
+          </ol>
+        </div>
+      </div>
+      <div class="nav">
+        <button class="btn-back" onclick="goTo(2)">Back</button>
+        <button class="btn-next" onclick="goTo(4)">Next</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Done -->
+    <div class="step" id="step-4">
+      <div class="content">
+        <div class="success-icon">&#x2705;</div>
+        <h2>You're All Set!</h2>
+        <p>The printer icon is now in your menu bar. Click it anytime to see your printers and recent print jobs.</p>
+        <label class="checkbox-row">
+          <input type="checkbox" id="launch-login" checked>
+          Start automatically when I log in
+        </label>
+      </div>
+      <div class="nav">
+        <button class="btn-back" onclick="goTo(3)">Back</button>
+        <button class="btn-next" onclick="finish()">Finish</button>
+      </div>
+    </div>
+
+    <div class="dots">
+      <div class="dot active" id="dot-1"></div>
+      <div class="dot" id="dot-2"></div>
+      <div class="dot" id="dot-3"></div>
+      <div class="dot" id="dot-4"></div>
+    </div>
+  </div>
+
+  <script>
+    const mptApi = require('@electron/remote').getGlobal('mptApi');
+    let currentStep = 1;
+
+    function goTo(step) {
+      document.getElementById(`step-${currentStep}`).classList.remove('active');
+      document.getElementById(`dot-${currentStep}`).classList.remove('active');
+      currentStep = step;
+      document.getElementById(`step-${currentStep}`).classList.add('active');
+      document.getElementById(`dot-${currentStep}`).classList.add('active');
+
+      if (step === 2) refreshPrinters();
+      if (step === 3) {
+        const port = mptApi.getPort();
+        document.getElementById('wizard-port').value = port;
+        document.getElementById('mpt-url').textContent = `http://localhost:${port}`;
+      }
+    }
+
+    function refreshPrinters() {
+      fetch(`http://localhost:${mptApi.getPort()}/api/printers`)
+        .then(r => r.json())
+        .then(printers => {
+          const el = document.getElementById('printer-list');
+          if (printers.length === 0) {
+            el.innerHTML = `<div class="no-printers">
+              <p>No printers found.</p>
+              <p style="font-size:12px">Add printers in System Settings &gt; Printers &amp; Scanners</p>
+            </div>`;
+          } else {
+            el.innerHTML = printers.map(p => `
+              <div class="printer-row">
+                <span class="check">&#x2713;</span>
+                <span class="name">${p.Name}</span>
+                ${p.IsDefault ? '<span class="default-tag">Default</span>' : ''}
+              </div>
+            `).join('');
+          }
+        });
+    }
+
+    function copyUrl() {
+      const url = document.getElementById('mpt-url').textContent;
+      mptApi.copyToClipboard(url);
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    }
+
+    function updatePort() {
+      const port = document.getElementById('wizard-port').value;
+      document.getElementById('mpt-url').textContent = `http://localhost:${port}`;
+    }
+
+    function openPrinterSettings() {
+      require('child_process').exec('open "x-apple.systempreferences:com.apple.Print-Scan-Fax-Preferences"');
+    }
+
+    function finish() {
+      const launchAtLogin = document.getElementById('launch-login').checked;
+      const newPort = parseInt(document.getElementById('wizard-port').value, 10) || 50515;
+      const portChanged = newPort !== mptApi.getPort();
+
+      if (launchAtLogin) {
+        mptApi.installLaunchAgent();
+      }
+      mptApi.saveConfig({ setupComplete: true, launchAtLogin, port: newPort });
+
+      if (portChanged) {
+        mptApi.setPort(newPort);
+      } else {
+        window.close();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -2,12 +2,12 @@
   "name": "mainchain-printing-tool-mac",
   "version": "1.0.0",
   "description": "macOS replacement for the Mainchain Printing Tool — enables direct printing from Freman on Mac",
-  "main": "server.js",
-  "bin": {
-    "mpt-mac": "server.js"
-  },
+  "main": "main.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "electron .",
+    "server": "node server.js",
+    "build": "electron-builder --mac",
+    "pack": "electron-builder --mac --dir"
   },
   "keywords": [
     "mainchain",
@@ -21,9 +21,31 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@electron/remote": "^2.1.0",
     "cors": "^2.8.5",
     "express": "^4.18.0",
     "uuid": "^9.0.0",
     "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.mainchain.mpt",
+    "productName": "Mainchain Printing Tool",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "assets/icon.icns",
+      "target": ["dmg", "zip"]
+    },
+    "files": [
+      "main.js",
+      "server.js",
+      "package.json",
+      "ui/**/*",
+      "assets/**/*",
+      "com.mainchain.mpt.plist"
+    ]
   }
 }

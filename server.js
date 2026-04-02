@@ -10,7 +10,7 @@ const os = require('os');
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.MPT_PORT || 50515;
+let PORT = process.env.MPT_PORT || 50515;
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '50mb' }));
@@ -93,6 +93,7 @@ function printTestPage(printerName) {
 const clientId = uuidv4();
 const connections = new Map();
 let messageCounter = 0;
+const printHistory = [];
 
 // ── SignalR Hub Proxy JS ──
 // Freman loads this as a <script> tag to discover hub methods
@@ -253,6 +254,21 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get('/api/status', (req, res) => {
+  res.json({
+    clientId,
+    version: '2.1.1.0',
+    port: PORT,
+    printers: listPrinters(),
+    connections: connections.size,
+    printHistory: printHistory.slice(-20)
+  });
+});
+
+app.get('/api/printers', (req, res) => {
+  res.json(listPrinters());
+});
+
 // ── Hub Method Handler ──
 
 function pushToClients(method, args) {
@@ -287,9 +303,12 @@ function handleHubInvocation(msg) {
           const pName = sendArg.printerName;
           const fileName = sendArg.filename || 'document.pdf';
           console.log(`[print] ${fileName} -> ${pName}`);
+          const job = { filename: fileName, printer: pName, time: new Date().toISOString(), status: 'sending' };
+          printHistory.push(job);
+          if (printHistory.length > 50) printHistory.shift();
           printPDF(pName, sendArg.file, 1)
-            .then(() => console.log(`[print] OK: ${fileName}`))
-            .catch(e => console.error(`[print] FAILED: ${fileName}:`, e.message));
+            .then(() => { job.status = 'sent'; console.log(`[print] OK: ${fileName}`); })
+            .catch(e => { job.status = 'failed'; console.error(`[print] FAILED: ${fileName}:`, e.message); });
         } else {
           // Handshake — push printer data via addMessage client callback
           const printers = listPrinters();
@@ -475,16 +494,29 @@ server.on('upgrade', (req, socket, head) => {
 
 // ── Start ──
 
-server.listen(PORT, () => {
-  const printers = listPrinters();
-  console.log('');
-  console.log('  Mainchain Printing Tool (macOS)');
-  console.log('  ================================');
-  console.log(`  Listening on http://localhost:${PORT}`);
-  console.log(`  Printers found: ${printers.length}`);
-  printers.forEach(p => {
-    console.log(`    ${p.IsDefault ? '*' : ' '} ${p.Name} (${p.Status})`);
+function startServer(port) {
+  if (port) PORT = port;
+  return new Promise((resolve) => {
+    server.listen(PORT, () => {
+      const printers = listPrinters();
+      console.log('');
+      console.log('  Mainchain Printing Tool (macOS)');
+      console.log('  ================================');
+      console.log(`  Listening on http://localhost:${PORT}`);
+      console.log(`  Printers found: ${printers.length}`);
+      printers.forEach(p => {
+        console.log(`    ${p.IsDefault ? '*' : ' '} ${p.Name} (${p.Status})`);
+      });
+      console.log('  ================================');
+      console.log('');
+      resolve({ port: PORT, printers });
+    });
   });
-  console.log('  ================================');
-  console.log('');
-});
+}
+
+// If run directly (not required as module), start immediately
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = { startServer, listPrinters, PORT };

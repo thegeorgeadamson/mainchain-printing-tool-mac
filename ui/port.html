@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      padding: 40px 30px 30px;
+    }
+    .titlebar { -webkit-app-region: drag; height: 38px; position: fixed; top: 0; left: 0; right: 0; }
+    h2 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    p { font-size: 13px; color: #888; margin-bottom: 16px; }
+    .input-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    input {
+      flex: 1;
+      background: #252525;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 15px;
+      font-family: 'SF Mono', Menlo, monospace;
+      outline: none;
+    }
+    input:focus { border-color: #0a84ff; }
+    .buttons { display: flex; justify-content: flex-end; gap: 10px; }
+    button {
+      padding: 7px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-cancel { background: #333; color: #ccc; }
+    .btn-cancel:hover { background: #444; }
+    .btn-save { background: #0a84ff; color: #fff; }
+    .btn-save:hover { background: #0070e0; }
+    .note { font-size: 11px; color: #666; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="titlebar"></div>
+  <h2>Change Port</h2>
+  <p>The app will restart to apply the new port.</p>
+  <div class="input-row">
+    <input type="number" id="port" min="1024" max="65535" placeholder="50515">
+  </div>
+  <div class="buttons">
+    <button class="btn-cancel" onclick="window.close()">Cancel</button>
+    <button class="btn-save" onclick="save()">Save & Restart</button>
+  </div>
+  <div class="note">Remember to update the URL in Freman's printing settings too.</div>
+
+  <script>
+    const mptApi = require('@electron/remote').getGlobal('mptApi');
+    document.getElementById('port').value = mptApi.getPort();
+
+    function save() {
+      const port = parseInt(document.getElementById('port').value, 10);
+      if (port >= 1024 && port <= 65535) {
+        mptApi.setPort(port);
+      }
+    }
+
+    document.getElementById('port').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') save();
+      if (e.key === 'Escape') window.close();
+    });
+  </script>
+</body>
+</html>
